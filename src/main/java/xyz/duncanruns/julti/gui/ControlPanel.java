@@ -36,18 +36,6 @@ public class ControlPanel extends JPanel {
         this.add(GUIUtil.getButtonWithMethod(new JButton("Instance Utilities..."), a -> {
             JPopupMenu menu = new JPopupMenu("Instance Utilities");
 
-            if (!JultiOptions.getJultiOptions().utilityMode) {
-                GUIUtil.addMenuItem(menu, "Redetect Instances", new AbstractAction() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Thread.currentThread().setName("julti-gui");
-                        if (0 == JOptionPane.showConfirmDialog(JultiGUI.getJultiGUI(), "This will remove all instances saved to the profile and replace them with new ones.\nAre you sure you want to do this?", "Julti: Redetect Instances", JOptionPane.OK_CANCEL_OPTION)) {
-                            Julti.doLater(() -> InstanceManager.getInstanceManager().redetectInstances());
-                        }
-                    }
-                });
-            }
-
             GUIUtil.addMenuItem(menu, "Reload Instance Options", new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -56,15 +44,6 @@ public class ControlPanel extends JPanel {
 
                 }
             });
-            if (!JultiOptions.getJultiOptions().utilityMode) {
-                GUIUtil.addMenuItem(menu, "Launch All Instances", new AbstractAction() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Thread.currentThread().setName("julti-gui");
-                        SafeInstanceLauncher.launchInstances(InstanceManager.getInstanceManager().getInstances());
-                    }
-                });
-            }
 
             GUIUtil.addMenuItem(menu, "Close All Instances", new AbstractAction() {
                 @Override
@@ -119,37 +98,13 @@ public class ControlPanel extends JPanel {
                 }
             });
 
-            GUIUtil.addMenuItem(menu, "Sync Instances", new AbstractAction() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Thread.currentThread().setName("julti-gui");
-                    if (InstanceManager.getInstanceManager().getInstances().size() < 2) {
-                        Julti.log(Level.ERROR, "Can't sync instances with less than 2 instances!");
-                        return;
-                    }
-                    Optional<Set<SyncUtil.SyncOptions>> ans = SyncUtil.ask();
-                    if (!ans.isPresent()) {
-                        return;
-                    }
-                    new Thread(() -> {
-                        try {
-                            List<MinecraftInstance> instances = InstanceManager.getInstanceManager().getInstances();
-                            SyncUtil.sync(instances, instances.get(0), ans.get());
-                        } catch (IOException er) {
-                            log(Level.ERROR, "Failed to copy files:\n" + ExceptionUtil.toDetailedString(er));
-                        }
-                    }, "instance-sync").start();
-
-                }
-            });
-
-            GUIUtil.addMenuItem(menu, "Open .Julti", new AbstractAction() {
+            GUIUtil.addMenuItem(menu, "Open .Jultility", new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
                         Desktop.getDesktop().browse(JultiOptions.getJultiDir().toAbsolutePath().toUri());
                     } catch (IOException ex) {
-                        Julti.log(Level.ERROR, "Failed to open .Julti folder:\n" + ExceptionUtil.toDetailedString(ex));
+                        Julti.log(Level.ERROR, "Failed to open .Jultility folder:\n" + ExceptionUtil.toDetailedString(ex));
                     }
                 }
             });
