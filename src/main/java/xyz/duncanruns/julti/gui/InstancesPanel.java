@@ -3,7 +3,6 @@ package xyz.duncanruns.julti.gui;
 import com.formdev.flatlaf.ui.FlatMarginBorder;
 import xyz.duncanruns.julti.instance.MinecraftInstance;
 import xyz.duncanruns.julti.management.InstanceManager;
-import xyz.duncanruns.julti.util.GUIUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +19,6 @@ public class InstancesPanel extends JPanel {
     private final Supplier<Boolean> shouldShutdownSupplier;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final ArrayList<SingleInstancePanel> instancePanels = new ArrayList<>();
-    public final JCheckBox utilityCheckBox;
 
     private int lastActive = 0;
 
@@ -37,11 +35,6 @@ public class InstancesPanel extends JPanel {
         JLabel instancesLabel = new JLabel("Instances");
         instancesLabel.setHorizontalAlignment(SwingConstants.CENTER);
         panel.add(instancesLabel);
-
-        panel.add(GUIUtil.createSpacer(1));
-
-        this.utilityCheckBox = GUIUtil.createCheckBoxFromOption("Utility Mode", "utilityMode", b -> OptionsGUI.reloadIfOpen());
-        panel.add(this.utilityCheckBox);
 
         this.add(panel, new GridBagConstraints(0, 0, 1, 1, 0, 0, 10, 0, new Insets(0, 0, 5, 0), 0, 0));
 

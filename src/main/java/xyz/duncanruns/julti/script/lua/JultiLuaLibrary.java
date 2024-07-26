@@ -300,11 +300,6 @@ class JultiLuaLibrary extends LuaLibrary {
         CommandManager.getMainManager().runCommand(command, this.cancelRequester);
     }
 
-    @LuaDocumentation(description = "Brings the user to the wall window if it exists.")
-    public void focusWall() {
-        Julti.waitForExecute(() -> Julti.getJulti().focusWall());
-    }
-
     @LuaDocumentation(description = "Runs a script of the specified name and waits for it to end.")
     public void runScript(String scriptName) {
         ScriptManager.runScriptAndWait(scriptName);

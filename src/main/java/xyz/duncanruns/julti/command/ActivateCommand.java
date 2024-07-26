@@ -34,10 +34,6 @@ public class ActivateCommand extends Command {
 
     @Override
     public void run(String[] args, CancelRequester cancelRequester) {
-        if (args[0].equals("wall")) {
-            Julti.waitForExecute(() -> Julti.getJulti().focusWall());
-            return;
-        }
         boolean doUnpause;
         if (args.length > 1) {
             if (args[1].equals("unpause")) {

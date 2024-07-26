@@ -294,13 +294,11 @@ public class WallResetManager extends ResetManager {
             this.resetInstance(selectedInstance, true);
             sleep(100);
         }
-        boolean nextInstanceFound = this.activateNextInstance(instances, nextInstance);
         if (!resetFirst) {
             this.resetInstance(selectedInstance, true);
         }
 
-        // We can confidently return that an instance was reset, but not necessarily that an instance was activated.
-        return nextInstanceFound ? Arrays.asList(ActionResult.INSTANCE_RESET, ActionResult.INSTANCE_ACTIVATED) : Collections.singletonList(ActionResult.INSTANCE_RESET);
+        return List.of();
     }
 
     @Nullable
@@ -330,26 +328,4 @@ public class WallResetManager extends ResetManager {
         this.lockedInstances.remove(nextInstance);
     }
 
-    /**
-     * @param instances    Minecraft instances involved
-     * @param nextInstance The next potential instance.
-     *
-     * @return true if an instance was activated, otherwise false
-     */
-    private boolean activateNextInstance(List<MinecraftInstance> instances, @Nullable MinecraftInstance nextInstance) {
-        JultiOptions options = JultiOptions.getJultiOptions();
-        if (!options.wallBypass || nextInstance == null) {
-            // No more instances to play
-            Julti.getJulti().focusWall();
-            return false;
-        } else {
-            this.unlockInstance(nextInstance);
-            // activate projector - avoid previous instances behind selected instance when using thin BT, etc.
-            if (options.activateProjectorOnReset) {
-                Julti.getJulti().focusWall(false);
-            }
-            Julti.getJulti().activateInstance(nextInstance);
-            return true;
-        }
-    }
 }

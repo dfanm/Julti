@@ -80,6 +80,5 @@ public class FixFullscreenCommand extends Command {
                 } while (couldBeFullscreen(instance));
             }
         }
-        Julti.doLater(julti::focusWall);
     }
 }

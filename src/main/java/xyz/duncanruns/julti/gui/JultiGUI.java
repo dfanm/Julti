@@ -160,7 +160,6 @@ public class JultiGUI extends JFrame {
                             Julti.log(Level.INFO, "Utility Mode disabled.");
                         }
                         OptionsGUI.reloadIfOpen();
-                        INSTANCE.getInstancesPanel().utilityCheckBox.setSelected(options.utilityMode);
                     }
                 }
             }
