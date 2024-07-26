@@ -1,7 +1,6 @@
 package xyz.duncanruns.julti.instance;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinDef.HWND;
@@ -9,11 +8,9 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.Level;
 import xyz.duncanruns.julti.Julti;
 import xyz.duncanruns.julti.JultiOptions;
-import xyz.duncanruns.julti.affinity.AffinityManager;
 import xyz.duncanruns.julti.instance.InstanceState.InWorldState;
 import xyz.duncanruns.julti.management.ActiveWindowManager;
 import xyz.duncanruns.julti.plugin.PluginEvents;
-import xyz.duncanruns.julti.resetting.ResetHelper;
 import xyz.duncanruns.julti.util.*;
 import xyz.duncanruns.julti.win32.User32;
 
@@ -71,7 +68,7 @@ public class MinecraftInstance {
 
     public MinecraftInstance(Path path) {
         this.hwnd = null;
-        this.versionString = tryObtainVersionString(path);
+        this.versionString = null;
         this.presser = null;
         this.scheduler = null;
         this.instanceType = obtainClosedInstanceType(path);
@@ -79,33 +76,6 @@ public class MinecraftInstance {
 
         this.path = path;
         this.windowMissing = true;
-    }
-
-    private static String tryObtainVersionString(Path path) {
-        try {
-            return obtainVersionString(path);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static String obtainVersionString(Path path) throws IOException {
-        Path mmcPackPath = path.resolveSibling("mmc-pack.json");
-        if (!Files.isRegularFile(mmcPackPath)) {
-            return null;
-        }
-        String contents = FileUtil.readString(mmcPackPath);
-        JsonObject json = new Gson().fromJson(contents, JsonObject.class);
-        if (!json.has("components")) {
-            return null;
-        }
-        for (JsonElement element : json.getAsJsonArray("components")) {
-            JsonObject object = element.getAsJsonObject();
-            if (object.has("uid") && object.has("version") && object.get("uid").getAsString().equals("net.minecraft")) {
-                return object.get("version").getAsString();
-            }
-        }
-        return null;
     }
 
     private static InstanceType obtainClosedInstanceType(Path path) {
@@ -325,9 +295,6 @@ public class MinecraftInstance {
         this.openedToLan = false;
         this.activeSinceReset = false;
 
-        // Jump affinity
-        AffinityManager.jumpPrePreviewAffinity(this);
-
         // Increment Reset Counter
         ResetCounter.increment();
 
@@ -359,7 +326,6 @@ public class MinecraftInstance {
 
         JultiOptions options = JultiOptions.getJultiOptions();
 
-        AffinityManager.jumpPlayingAffinity(this); // Affinity Jump (BRAND NEW TECH POGGERS)
         ActiveWindowManager.activateHwnd(this.hwnd);
         if (!doingSetup && (!options.autoFullscreen || options.usePlayingSizeWithFullscreen)) {
             this.ensurePlayingWindowState(false);
@@ -494,7 +460,6 @@ public class MinecraftInstance {
                 break;
         }
 
-        ResetHelper.getManager().notifyWorldLoaded(this);
     }
 
     private boolean shouldF3Pause() {
@@ -507,7 +472,6 @@ public class MinecraftInstance {
         if (this.shouldF3Pause() && !this.gameOptions.f3PauseOnWorldLoad) {
             this.scheduler.schedule(this.presser::pressF3Esc, 50);
         }
-        ResetHelper.getManager().notifyPreviewLoaded(this);
     }
 
     public boolean isResettable() {
