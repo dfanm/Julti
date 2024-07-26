@@ -1,15 +1,11 @@
 package xyz.duncanruns.julti;
 
 import com.google.common.collect.ImmutableMap;
-import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.platform.win32.WinDef.HWND;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import xyz.duncanruns.julti.affinity.AffinityManager;
 import xyz.duncanruns.julti.gui.JultiGUI;
 import xyz.duncanruns.julti.hotkey.HotkeyManager;
 import xyz.duncanruns.julti.instance.InstanceState;
@@ -20,7 +16,6 @@ import xyz.duncanruns.julti.management.LogReceiver;
 import xyz.duncanruns.julti.management.OBSStateManager;
 import xyz.duncanruns.julti.messages.*;
 import xyz.duncanruns.julti.plugin.PluginEvents;
-import xyz.duncanruns.julti.resetting.ResetHelper;
 import xyz.duncanruns.julti.script.ScriptManager;
 import xyz.duncanruns.julti.util.*;
 import xyz.duncanruns.julti.win32.User32;
@@ -35,7 +30,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -134,7 +128,7 @@ public final class Julti {
     }
 
     public static void resetInstancePositions() {
-        InstanceManager.getInstanceManager().getInstances().stream().filter(MinecraftInstance::hasWindow).forEach(JultiOptions.getJultiOptions().utilityMode ? MinecraftInstance::ensurePlayingWindowState : MinecraftInstance::ensureInitialWindowState);
+        InstanceManager.getInstanceManager().getInstances().stream().filter(MinecraftInstance::hasWindow).forEach(MinecraftInstance::ensurePlayingWindowState);
     }
 
     private void changeProfile(QMessage message) {
@@ -154,7 +148,6 @@ public final class Julti {
     private void reload() {
         InstanceManager.getInstanceManager().onOptionsLoad();
         HotkeyManager.getHotkeyManager().reloadHotkeys();
-        ResetHelper.getManager().reload();
         ResetCounter.updateFiles();
         PluginEvents.RunnableEventType.RELOAD.runAll();
         // Trigger plugin data loaders
@@ -174,9 +167,7 @@ public final class Julti {
 
     private void stop() {
         JultiOptions.getJultiOptions().trySave();
-        AffinityManager.release();
         SleepBGUtil.disableLock();
-        AffinityManager.release();
         PluginEvents.RunnableEventType.STOP.runAll();
         this.running = false;
     }
@@ -222,15 +213,11 @@ public final class Julti {
         PluginEvents.RunnableEventType.START_TICK.runAll();
         ActiveWindowManager.update();
         InstanceManager.getInstanceManager().tick(cycles);
-        ResetHelper.getManager().tick(cycles);
         if (cycles % 100 == 0) {
             this.ensureLocation();
         }
         this.processQMessages();
         this.processHotkeyMessages();
-        if (cycles % 100 == 0) {
-            AffinityManager.tick();
-        }
         InstanceManager.getInstanceManager().tickInstances();
         OBSStateManager.getOBSStateManager().tryOutputState();
         PluginEvents.RunnableEventType.END_TICK.runAll();
@@ -317,9 +304,7 @@ public final class Julti {
             ScriptManager.cancelAllScripts();
         } else {
             JultiOptions options = JultiOptions.getJultiOptions();
-            if (!options.utilityMode) {
-                ResetHelper.run(hotkeyCode, mousePosition);
-            } else if (options.utilityModeAllowResets && hotkeyCode.equals("reset")) {
+            if (options.utilityModeAllowResets && hotkeyCode.equals("reset")) {
                 runUtilityModeReset();
             }
         }
@@ -367,38 +352,4 @@ public final class Julti {
             User32.INSTANCE.ShowWindow(ActiveWindowManager.getActiveHwnd(), User32.SW_MINIMIZE);
         }
         OBSStateManager.getOBSStateManager().setLocation(InstanceManager.getInstanceManager().getInstanceNum(instance));
-    }
-
-    public void focusWall() {
-        this.focusWall(true);
-    }
-
-    public void focusWall(boolean disableLock) {
-        if (disableLock) {
-            SleepBGUtil.disableLock();
-        }
-        AtomicReference<HWND> wallHwnd = new AtomicReference<>(ActiveWindowManager.getLastWallHwnd());
-        if (wallHwnd.get() == null) {
-            User32.INSTANCE.EnumWindows((hwnd, data) -> {
-                if (ActiveWindowManager.isWallHwnd(hwnd)) {
-                    wallHwnd.set(hwnd);
-                    return false;
-                }
-                return true;
-            }, null);
-            if (wallHwnd.get() == null) {
-                log(Level.ERROR, "No Wall Window found!");
-                return;
-            }
-        }
-        HWND hwnd = wallHwnd.get();
-        if (JultiOptions.getJultiOptions().alwaysOnTopProjector) {
-            // Set always on top
-            User32.INSTANCE.SetWindowPos(hwnd, new HWND(new Pointer(-1)), 0, 0, 0, 0, new WinDef.UINT(0x0002 | 0x0001));
-        }
-        ActiveWindowManager.activateHwnd(hwnd);
-        User32.INSTANCE.ShowWindow(hwnd, User32.SW_SHOWMAXIMIZED);
-        OBSStateManager.getOBSStateManager().setLocationToWall();
-        PluginEvents.RunnableEventType.WALL_ACTIVATE.runAll();
-    }
-}
+    }}
