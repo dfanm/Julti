@@ -98,45 +98,6 @@ public class WindowOptionComponent extends JPanel {
         return positionPanel;
     }
 
-    private static JPanel getRSizePanel() {
-        JPanel positionPanel = new JPanel();
-        positionPanel.setLayout(new BoxLayout(positionPanel, 0));
-        NumberFormat format = NumberFormat.getInstance();
-        format.setGroupingUsed(false);
-        NumberFormatter formatter = new NumberFormatter(format);
-        formatter.setValueClass(Integer.class);
-        formatter.setCommitsOnValidEdit(true);
-        JFormattedTextField xField = new JFormattedTextField(formatter);
-        JFormattedTextField yField = new JFormattedTextField(formatter);
-        GUIUtil.setActualSize(xField, 50, 23);
-        GUIUtil.setActualSize(yField, 50, 23);
-        positionPanel.add(xField);
-        positionPanel.add(yField);
-        int[] windowSize = JultiOptions.getJultiOptions().resettingWindowSize;
-        xField.setValue(windowSize[0]);
-        yField.setValue(windowSize[1]);
-        KeyListener keyListener = new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                this.update();
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                this.update();
-            }
-
-            private void update() {
-                int[] value = {(int) xField.getValue(), (int) yField.getValue()};
-                Julti.getJulti().queueMessageAndWait(new OptionChangeQMessage("resettingWindowSize", value));
-            }
-        };
-        xField.addKeyListener(keyListener);
-        yField.addKeyListener(keyListener);
-        GUIUtil.setActualSize(positionPanel, 200, 23);
-        return positionPanel;
-    }
-
     public void reload() {
         this.removeAll();
         String wpLabelString = JultiOptions.getJultiOptions().windowPosIsCenter ? "Window Position (Center)" : "Window Position (Top-Left)";
@@ -145,10 +106,5 @@ public class WindowOptionComponent extends JPanel {
         this.add(GUIUtil.leftJustify(GUIUtil.createCheckBoxFromOption("Window Position is Center", "windowPosIsCenter", b -> this.reload())));
         this.add(GUIUtil.leftJustify(new JLabel("Playing Window Size")));
         this.add(GUIUtil.leftJustify(getSizePanel()));
-
-        if (!JultiOptions.getJultiOptions().utilityMode) {
-            this.add(GUIUtil.leftJustify(new JLabel("Resetting Window Size")));
-            this.add(GUIUtil.leftJustify(getRSizePanel()));
-        }
     }
 }
