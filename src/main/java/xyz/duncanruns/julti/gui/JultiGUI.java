@@ -48,18 +48,6 @@ public class JultiGUI extends JFrame {
         return INSTANCE;
     }
 
-    public static PluginsGUI getPluginsGUI() {
-        return PluginsGUI.getGUI();
-    }
-
-    public ControlPanel getControlPanel() {
-        return this.controlPanel;
-    }
-
-    public InstancesPanel getInstancesPanel() {
-        return this.instancesPanel;
-    }
-
     public JultiIcon getJultiIcon() {
         return this.trayIcon;
     }

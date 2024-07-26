@@ -10,7 +10,6 @@ import xyz.duncanruns.julti.management.InstanceManager;
 import xyz.duncanruns.julti.util.DoAllFastUtil;
 import xyz.duncanruns.julti.util.SleepBGUtil;
 
-import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -51,7 +50,7 @@ public class WallResetManager extends ResetManager {
         }
 
         // Only place leaveInstance is used, but it is a big method
-        List<ActionResult> out = this.leaveInstance(selectedInstance, instances);
+        List<ActionResult> out = this.leaveInstance(selectedInstance);
 
         super.doReset();
 
@@ -192,7 +191,6 @@ public class WallResetManager extends ResetManager {
     @Override
     public void notifyPreviewLoaded(MinecraftInstance instance) {
         super.notifyPreviewLoaded(instance);
-        JultiOptions options = JultiOptions.getJultiOptions();
     }
 
     @Override
@@ -240,19 +238,8 @@ public class WallResetManager extends ResetManager {
         JultiOptions options = JultiOptions.getJultiOptions();
 
         if (!bypassLoadCheck && options.wallLockInsteadOfPlay && !(instance.getStateTracker().isCurrentState(InstanceState.INWORLD))) {
-            List<ActionResult> results = new ArrayList<>(this.lockInstance(instance) ? Collections.singletonList(ActionResult.INSTANCE_LOCKED) : Collections.emptyList());
 
-            if (options.wallSmartSwitch) {
-                // ! This code is on the edge of dangerous !
-                // This can cause infinite recursion if messed with badly
-                // This point of the code can only be accessed if the instance parameter has not loaded in generation
-                // Take note that the instance passed into playInstanceFromWall must be a loaded instance!
-                MinecraftInstance ssInstance = this.getNextPlayableLockedInstance(true);
-                if (ssInstance != null) {
-                    results.addAll(this.playInstanceFromWall(ssInstance, false));
-                }
-            }
-            return results;
+            return new ArrayList<>(this.lockInstance(instance) ? Collections.singletonList(ActionResult.INSTANCE_LOCKED) : Collections.emptyList());
 
         }
 
@@ -277,7 +264,7 @@ public class WallResetManager extends ResetManager {
         return actionResults;
     }
 
-    public List<ActionResult> leaveInstance(MinecraftInstance selectedInstance, List<MinecraftInstance> instances) {
+    public List<ActionResult> leaveInstance(MinecraftInstance selectedInstance) {
         JultiOptions options = JultiOptions.getJultiOptions();
 
         boolean resetFirst = options.coopMode && options.wallBypass;
@@ -286,9 +273,6 @@ public class WallResetManager extends ResetManager {
 
         // Unlock instance
         this.unlockInstance(selectedInstance);
-
-        // Get next instance
-        MinecraftInstance nextInstance = this.getNextPlayableLockedInstance(options.returnToWallIfNoneLoaded);
 
         if (resetFirst) {
             this.resetInstance(selectedInstance, true);
@@ -301,28 +285,6 @@ public class WallResetManager extends ResetManager {
         return List.of();
     }
 
-    @Nullable
-    private MinecraftInstance getNextPlayableLockedInstance(boolean onlyConsiderLoaded) {
-        // If empty return null
-        if (this.lockedInstances.isEmpty()) {
-            return null;
-        }
-
-        // Return any loaded instances
-        for (MinecraftInstance instance : this.lockedInstances) {
-            if (instance.getStateTracker().isCurrentState(InstanceState.INWORLD)) {
-                return instance;
-            }
-        }
-
-        // Return null if only considering loaded instances
-        if (onlyConsiderLoaded) {
-            return null;
-        }
-
-        // Just return any instance otherwise
-        return this.lockedInstances.iterator().next();
-    }
 
     private void unlockInstance(MinecraftInstance nextInstance) {
         this.lockedInstances.remove(nextInstance);
