@@ -89,23 +89,13 @@ public class SingleInstancePanel extends JPanel implements MouseListener {
 
     private void doPop(MouseEvent e) {
         JPopupMenu popupMenu = new JPopupMenu();
-        if (this.instance.hasWindow()) {
-            GUIUtil.addMenuItem(popupMenu, "Close", new AbstractAction() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Thread.currentThread().setName("julti-gui");
-                    SingleInstancePanel.this.instance.closeWindow();
+        GUIUtil.addMenuItem(popupMenu, "Close", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                 Thread.currentThread().setName("julti-gui");
+                 SingleInstancePanel.this.instance.closeWindow();
                 }
             });
-        } else {
-            GUIUtil.addMenuItem(popupMenu, "Launch", new AbstractAction() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Thread.currentThread().setName("julti-gui");
-                    SafeInstanceLauncher.launchInstance(SingleInstancePanel.this.instance);
-                }
-            });
-        }
         GUIUtil.addMenuItem(popupMenu, "Open Folder", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -124,15 +114,6 @@ public class SingleInstancePanel extends JPanel implements MouseListener {
                 }
             }
         });
-        if (!JultiOptions.getJultiOptions().utilityMode) {
-            GUIUtil.addMenuItem(popupMenu, "Remove", new AbstractAction() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Thread.currentThread().setName("julti-gui");
-                    Julti.waitForExecute(() -> InstanceManager.getInstanceManager().removeInstance(SingleInstancePanel.this.instance));
-                }
-            });
-        }
         popupMenu.show(e.getComponent(), e.getX(), e.getY());
     }
 }
